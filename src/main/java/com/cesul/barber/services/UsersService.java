@@ -25,7 +25,7 @@ public class UsersService {
 
     }
 
-    public Optional<UserCreationDTO> update(UUID id, Map<String, String> request) {
+    public Optional<UserCreationDTO> update(UUID id, UserCreationDTO updateDate) {
         Optional<UserCreationDTO> userOptional = ;
     }
 
