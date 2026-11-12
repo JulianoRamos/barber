@@ -1,6 +1,7 @@
 package com.cesul.barber.controllers;
 
 import com.cesul.barber.dtos.UserCreationDTO;
+import com.cesul.barber.services.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -16,10 +17,16 @@ public class UsersController {
 
     private List<UserCreationDTO> users = new ArrayList<>();
 
+    private UsersService usersService;
+
+    public UsersController(UsersService usersService) {
+        this.usersService = usersService;
+    }
+
     @GetMapping
     @Operation(summary = "Listar todos", description = "Retorna a lista de todos os usuários cadastrados.")
     public ResponseEntity<List<UserCreationDTO>> getAll() {
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(this.usersService.findAll());
     }
 
     @PutMapping("/{id}")
@@ -36,14 +43,18 @@ public class UsersController {
     }
 
     @PostMapping
+    @Operation(summary = "Criar utilizador", description = "Gera um ID automático, valida os dados (nome e e-mail) e salva na lista.")
     public ResponseEntity<UserCreationDTO> create(@RequestBody UserCreationDTO user) {
-        user.setId(UUID.randomUUID());
-        this.users.add(user);
+        UserCreationDTO newUser = this.usersService.create(user);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
 
     @PatchMapping("/{id}/avatar")
+    @Operation(
+            summary = "Atualizar Avatar",
+            description = "Atualiza exclusivamente a imagem de perfil do utilizador. Ignora outros campos."
+    )
     public ResponseEntity<UserCreationDTO> patchUser(@PathVariable UUID id, @RequestBody Map<String, Object> avatar) {
         Optional<UserCreationDTO> userOptional = users.stream()
                 .filter(u -> u.getId().equals(id))
@@ -63,6 +74,7 @@ public class UsersController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Deletar utilizador", description = "Remove o utilizador correspondente ao ID da lista.")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         boolean removed = users.removeIf(u -> u.getId().equals(id));
 
@@ -73,6 +85,7 @@ public class UsersController {
     }
 
     @DeleteMapping("/clear")
+    @Operation(summary = "Limpar utilizadores", description = "Limpa a lista em memória (Útil para reiniciar os testes durante a aula).")
     public ResponseEntity<Void> clearUsers() {
         this.users.clear();
         return ResponseEntity.noContent().build();
